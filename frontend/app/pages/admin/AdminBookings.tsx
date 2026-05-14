@@ -1,0 +1,327 @@
+import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Search, Calendar, User, Mail, CreditCard } from 'lucide-react';
+import { Input } from '../../components/Input';
+import { Button } from '../../components/Button';
+import { hotelApi } from '../../api';
+import type { Booking, BookingStatus } from '../../types';
+import { toast } from 'sonner';
+import { useAuth } from '../../components/AuthContext';
+import { formatCurrency } from '../../components/utils';
+
+export function AdminBookings() {
+  const { isAdmin } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  const loadBookings = () => {
+    hotelApi.getBookings()
+      .then((data) => setBookings(data.bookings))
+      .catch(() => setBookings([]));
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadBookings();
+    }
+  }, [isAdmin]);
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen pt-24 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-3xl mb-3">Admin access required</h2>
+          <Link to="/login">Sign in with the admin account</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const filteredBookings = bookings.filter((booking) => {
+    const matchesSearch =
+      booking.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.roomName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || booking.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-green-500/10 text-green-600 border-green-500/20';
+      case 'pending':
+        return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+      case 'cancelled':
+        return 'bg-red-500/10 text-red-600 border-red-500/20';
+      case 'completed':
+        return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+      default:
+        return 'bg-secondary';
+    }
+  };
+
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
+      case 'pending':
+        return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+      case 'refunded':
+        return 'bg-slate-500/10 text-slate-600 border-slate-500/20';
+      default:
+        return 'bg-secondary';
+    }
+  };
+
+  const getPaymentMethodLabel = (method: string) =>
+    method === 'bank_transfer' ? 'Bank Payment' : 'Pay at Counter';
+
+  const getBookingCardClass = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-amber-50/70 border-amber-200';
+      case 'confirmed':
+        return 'bg-emerald-50/60 border-emerald-200';
+      case 'completed':
+        return 'bg-blue-50/60 border-blue-200';
+      case 'cancelled':
+        return 'bg-red-50/60 border-red-200';
+      default:
+        return 'bg-secondary/50 border-border';
+    }
+  };
+
+  const handleStatusUpdate = async (bookingId: string, status: BookingStatus) => {
+    if (status === 'cancelled') {
+      const confirmed = window.confirm('Are you sure you want to cancel this booking?');
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    try {
+      await hotelApi.updateBookingStatus(bookingId, status);
+      toast.success('Booking status updated');
+      loadBookings();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to update booking');
+    }
+  };
+
+  const handlePaymentUpdate = async (bookingId: string, status: string) => {
+    try {
+      await hotelApi.updatePaymentStatus(bookingId, status);
+      toast.success('Payment status updated');
+      loadBookings();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to update payment');
+    }
+  };
+
+  return (
+    <div className="min-h-screen pt-24 pb-16">
+      <div className="px-4 max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="mb-8 md:mb-12"
+        >
+          <h1 className="text-3xl md:text-5xl mb-2">Booking Management</h1>
+          <p className="text-lg text-muted-foreground">View and manage all hotel bookings</p>
+        </motion.div>
+
+        {/* Filters */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.6 }}
+          className="flex flex-col gap-4 mb-8 xl:flex-row xl:items-center"
+        >
+          <div className="relative w-full xl:max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Input
+              placeholder="Search bookings..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-12"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={statusFilter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('all')}
+            >
+              All
+            </Button>
+            <Button
+              variant={statusFilter === 'confirmed' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('confirmed')}
+            >
+              Confirmed
+            </Button>
+            <Button
+              variant={statusFilter === 'pending' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('pending')}
+            >
+              Pending
+            </Button>
+            <Button
+              variant={statusFilter === 'cancelled' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('cancelled')}
+            >
+              Cancelled
+            </Button>
+            <Button
+              variant={statusFilter === 'completed' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('completed')}
+            >
+              Completed
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Bookings List */}
+        <div className="space-y-4">
+          {filteredBookings.map((booking, index) => (
+            <motion.div
+              key={booking.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05, duration: 0.6 }}
+              className={`overflow-hidden rounded-3xl p-5 sm:p-6 md:p-8 border ${getBookingCardClass(booking.status)}`}
+            >
+              <div className="flex flex-col gap-6 xl:flex-row xl:items-stretch xl:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-5">
+                    <div className="min-w-0">
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
+                        Booking details
+                      </p>
+                      <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between xl:justify-start">
+                        <h3 className="min-w-0 break-all text-xl font-medium sm:text-2xl">
+                          Booking #{booking.id}
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          <span
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusColor(
+                              booking.status
+                            )}`}
+                          >
+                            {booking.status}
+                          </span>
+                          <span
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getPaymentStatusColor(
+                              booking.paymentStatus
+                            )}`}
+                          >
+                            {booking.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="break-words text-base font-light text-muted-foreground sm:text-lg">
+                        {booking.roomName}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-4">
+                    <div className="flex min-w-0 items-center gap-3 text-sm">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Guest</p>
+                        <p className="break-words font-medium">{booking.userName}</p>
+                      </div>
+                    </div>
+                    <div className="flex min-w-0 items-center gap-3 text-sm">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Email</p>
+                        <p className="break-all font-medium">{booking.userEmail}</p>
+                      </div>
+                    </div>
+                    <div className="flex min-w-0 items-center gap-3 text-sm">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Stay</p>
+                        <p className="break-words font-medium">
+                          {new Date(booking.checkIn).toLocaleDateString()} - {new Date(booking.checkOut).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex min-w-0 items-center gap-3 text-sm">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
+                        <CreditCard className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Payment</p>
+                        <p className="break-words font-medium">{getPaymentMethodLabel(booking.paymentMethod)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex w-full shrink-0 flex-col gap-5 rounded-2xl border border-slate-100 bg-white/65 p-5 xl:w-80">
+                  <div>
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
+                      Booking value
+                    </p>
+                    <p className="mb-1 break-words text-2xl font-light sm:text-3xl">
+                      {formatCurrency(booking.totalPrice)}
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                      {booking.guests} guests
+                    </p>
+                  </div>
+                  <div>
+                    <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">
+                      Manage booking
+                    </p>
+                    <div className="grid gap-2">
+                    {booking.paymentStatus !== 'paid' && (
+                      <Button variant="outline" size="sm" className="justify-center bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100" onClick={() => handlePaymentUpdate(booking.id, 'paid')}>
+                        Confirm Payment
+                      </Button>
+                    )}
+                    {booking.status !== 'completed' && booking.status !== 'cancelled' ? (
+                      <Button variant="outline" size="sm" className="justify-center border-slate-200 bg-white" onClick={() => handleStatusUpdate(booking.id, 'completed')}>
+                        Complete Stay
+                      </Button>
+                    ) : null}
+                    {booking.status !== 'cancelled' && booking.status !== 'completed' ? (
+                      <Button variant="outline" size="sm" className="justify-center text-red-500 border-red-100 bg-white hover:bg-red-50 hover:text-red-600" onClick={() => handleStatusUpdate(booking.id, 'cancelled')}>
+                        Cancel Booking
+                      </Button>
+                    ) : null}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {filteredBookings.length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-lg text-muted-foreground">No bookings found</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
