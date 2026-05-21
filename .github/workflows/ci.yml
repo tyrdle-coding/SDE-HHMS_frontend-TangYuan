@@ -26,3 +26,29 @@ jobs:
 
       - name: Build application
         run: npm run build
+        env:
+          VITE_API_URL: ${{ github.ref == 'refs/heads/main' && secrets.VITE_API_URL_PRODUCTION || secrets.VITE_API_URL_STAGING }}
+
+  deploy-staging:
+    name: Deploy staging to Render
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm staging deploy hook is configured
+        run: test -n "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}"
+
+      - name: Trigger Render staging deploy
+        run: curl -fsS -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}"
+
+  deploy-production:
+    name: Deploy production to Render
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm production deploy hook is configured
+        run: test -n "${{ secrets.RENDER_PRODUCTION_DEPLOY_HOOK }}"
+
+      - name: Trigger Render production deploy
+        run: curl -fsS -X POST "${{ secrets.RENDER_PRODUCTION_DEPLOY_HOOK }}"
