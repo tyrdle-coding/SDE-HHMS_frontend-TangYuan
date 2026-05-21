@@ -9,9 +9,11 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   root: path.resolve(__dirname),
+
   plugins: [react(), tailwindcss()],
 
   server: {
+    host: '0.0.0.0',
     port: 5173,
     proxy: {
       '/api': 'http://localhost:3001',
@@ -20,6 +22,7 @@ export default defineConfig({
 
   preview: {
     host: '0.0.0.0',
+    port: Number(process.env.PORT) || 8080,
     allowedHosts: [
       'sdehotelmanagementsystemtangyuan-production.up.railway.app',
     ],
