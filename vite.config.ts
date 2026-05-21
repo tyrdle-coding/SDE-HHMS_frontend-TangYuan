@@ -10,12 +10,19 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   root: path.resolve(__dirname),
   plugins: [react(), tailwindcss()],
+
   server: {
     port: 5173,
     proxy: {
       '/api': 'http://localhost:3001',
     },
   },
+
+  preview: {
+    host: '0.0.0.0',
+    allowedHosts: true,
+  },
+
   build: {
     outDir: path.resolve(__dirname, 'dist'),
     emptyOutDir: true,
