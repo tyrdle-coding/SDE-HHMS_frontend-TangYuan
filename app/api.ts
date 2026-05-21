@@ -29,9 +29,7 @@ function mapBooking(b: any): Booking {
   };
 }
 
-const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  'https://sde-hhmsbackend-tangyuan-production.up.railway.app';
+const API_BASE = 'https://sde-hhmsbackend-tangyuan-production.up.railway.app';
 
 // Shared fetch helper for all frontend-to-backend API requests.
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
