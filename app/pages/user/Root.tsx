@@ -60,6 +60,7 @@ export function Root() {
               showVolumeControls={false}
               allowFullscreen={false}
               initiallyMuted
+              acknowledgeRemotionLicense
               onEnded={() => setShowIntro(false)}
               className="site-intro-player"
             />

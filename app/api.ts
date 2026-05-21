@@ -126,12 +126,18 @@ export const hotelApi = {
   uploadImage: (file: File) => {
     const formData = new FormData();
     formData.append('image', file);
-    return fetch('/api/upload', {
+    return fetch(`${API_BASE}/api/upload`, {
       method: 'POST',
       credentials: 'include',
       body: formData,
     }).then((res) => {
-      if (!res.ok) throw new Error('Upload failed');
+      if (!res.ok) {
+        return res
+          .json()
+          .catch(() => ({ message: 'Upload failed' }))
+          .then((error) => Promise.reject(new Error(error.message ?? 'Upload failed')));
+      }
+
       return res.json() as Promise<{ url: string }>;
     });
   },
