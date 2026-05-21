@@ -17,9 +17,12 @@ export default defineConfig({
     allowedHosts: [
       'sdehotelmanagementsystemtangyuan-production.up.railway.app',
     ],
-    proxy: {
-      '/api': 'http://localhost:3001',
-    },
+    proxy:
+      process.env.NODE_ENV === 'development'
+        ? {
+            '/api': 'http://localhost:3001',
+          }
+        : undefined,
   },
 
   preview: {
