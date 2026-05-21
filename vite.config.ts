@@ -20,7 +20,9 @@ export default defineConfig({
 
   preview: {
     host: '0.0.0.0',
-    allowedHosts: true,
+    allowedHosts: [
+      'sdehotelmanagementsystemtangyuan-production.up.railway.app',
+    ],
   },
 
   build: {
