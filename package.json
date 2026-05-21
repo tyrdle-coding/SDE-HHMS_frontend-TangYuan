@@ -30,7 +30,10 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
     "@types/leaflet": "^1.9.14",
+<<<<<<< HEAD
     "@types/node": "^25.9.1",
+=======
+>>>>>>> 894e3de (update)
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
