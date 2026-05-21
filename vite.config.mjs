@@ -16,6 +16,13 @@ export default defineConfig({
       '/api': process.env.VITE_API_URL ?? 'http://localhost:3001',
     },
   },
+  preview: {
+    host: '0.0.0.0',
+    port: Number(process.env.PORT) || 8080,
+    allowedHosts: [
+      'sdehotelmanagementsystemtangyuan-production.up.railway.app',
+    ],
+  },
   build: {
     outDir: path.resolve(__dirname, 'dist'),
     emptyOutDir: true,
