@@ -47,6 +47,7 @@ export interface User {
 
 export interface AuthSession {
   user: User;
+  token: string;
 }
 
 export interface AdminStats {

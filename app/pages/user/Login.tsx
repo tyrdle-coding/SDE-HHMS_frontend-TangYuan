@@ -25,6 +25,7 @@ export function Login() {
 
     try {
       const session = await hotelApi.login(formData.email, formData.password);
+      localStorage.setItem('hotel_token', session.token);
       const user = saveSession(session.user);
       toast.success('Signed in successfully');
       navigate(user.role === 'admin' ? '/admin' : '/dashboard');

@@ -43,12 +43,14 @@ function getNetworkError() {
 // Shared fetch helper for all frontend-to-backend API requests.
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
+  const token = localStorage.getItem('hotel_token');
 
   try {
     response = await fetch(`${API_BASE}${path}`, {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init?.headers ?? {}),
       },
       ...init,

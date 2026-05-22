@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, Calendar, User, Mail, CreditCard } from 'lucide-react';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
@@ -12,10 +12,17 @@ import { formatCurrency } from '../../components/utils';
 
 export function AdminBookings() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const isAdmin = user?.role === 'admin';
+
+  useEffect(() => {
+    if (user && user.role !== 'admin') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate, user]);
 
   const loadBookings = () => {
     hotelApi.getBookings()

@@ -43,6 +43,7 @@ export function Signup() {
         phone: formData.phone,
         password: formData.password,
       });
+      localStorage.setItem('hotel_token', session.token);
       saveSession(session.user);
       toast.success('Account created successfully');
       navigate('/dashboard');

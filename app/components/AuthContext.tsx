@@ -20,6 +20,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (!localStorage.getItem('hotel_token')) {
+      setUser(null);
+      return;
+    }
+
     hotelApi.getCurrentUser()
       .then((response) => {
         setUser(response.user);
@@ -31,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     hotelApi.logout().catch(() => undefined).finally(() => {
+      localStorage.removeItem('hotel_token');
       setUser(null);
     });
   };
