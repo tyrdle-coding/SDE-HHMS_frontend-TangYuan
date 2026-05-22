@@ -11,7 +11,6 @@ import { Footer } from '../../components/Footer';
 export function Root() {
   const location = useLocation();
   const [showIntro, setShowIntro] = useState(false);
-  const [introStarted, setIntroStarted] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 1920, height: 1080 });
   const playerRef = useRef<PlayerRef>(null);
 
@@ -30,10 +29,6 @@ export function Root() {
   }, []);
 
   useEffect(() => {
-    if (!introStarted) {
-      return;
-    }
-
     const timer = window.setTimeout(() => {
       setShowIntro(false);
     }, 5600);
@@ -41,16 +36,11 @@ export function Root() {
     return () => {
       window.clearTimeout(timer);
     };
-  }, [introStarted]);
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [location.pathname]);
-
-  const handleStartIntro = () => {
-    setIntroStarted(true);
-    playerRef.current?.play();
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -73,7 +63,7 @@ export function Root() {
               compositionWidth={dimensions.width}
               compositionHeight={dimensions.height}
               controls={false}
-              autoPlay={false}
+              autoPlay
               loop={false}
               clickToPlay={false}
               showVolumeControls={false}
@@ -82,16 +72,6 @@ export function Root() {
               onEnded={() => setShowIntro(false)}
               className="site-intro-player"
             />
-            {!introStarted ? (
-              <button
-                type="button"
-                onClick={handleStartIntro}
-                className="site-intro-start"
-                aria-label="Start intro"
-              >
-                Start
-              </button>
-            ) : null}
           </motion.div>
         ) : null}
       </AnimatePresence>

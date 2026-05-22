@@ -12,6 +12,10 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
 
   server: {
+    host: '0.0.0.0',
+    allowedHosts: [
+      'sdehotelmanagementsystemtangyuan-production.up.railway.app',
+    ],
     port: 5173,
     proxy: {
       '/api': {
