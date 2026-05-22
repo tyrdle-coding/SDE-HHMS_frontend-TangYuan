@@ -9,18 +9,19 @@ import { useAuth } from '../../components/AuthContext';
 import { formatCurrency } from '../../components/utils';
 
 export function AdminDashboard() {
-  const { isAdmin } = useAuth();
+  const { user } = useAuth();
   const [statsData, setStatsData] = useState<AdminStats | null>(null);
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (user?.role !== 'admin') {
       return;
     }
 
     hotelApi.getAdminStats()
       .then((data) => setStatsData(data.stats))
       .catch(() => setStatsData(null));
-  }, [isAdmin]);
+  }, [user?.role]);
 
   if (!isAdmin) {
     return (
