@@ -1,6 +1,7 @@
 import { Player } from '@remotion/player';
+import type { PlayerRef } from '@remotion/player';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Navigation } from '../../components/Navigation';
 import { Toaster } from '../../components/Toaster';
@@ -11,6 +12,7 @@ export function Root() {
   const location = useLocation();
   const [showIntro, setShowIntro] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 1920, height: 1080 });
+  const playerRef = useRef<PlayerRef>(null);
 
   useEffect(() => {
     setShowIntro(true);
@@ -21,13 +23,18 @@ export function Root() {
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
 
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, []);
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       setShowIntro(false);
     }, 5600);
 
     return () => {
       window.clearTimeout(timer);
-      window.removeEventListener('resize', updateDimensions);
     };
   }, []);
 
@@ -48,6 +55,8 @@ export function Root() {
             className="site-intro-shell"
           >
             <Player
+              ref={playerRef}
+              acknowledgeRemotionLicense
               component={HotelIntroComposition}
               durationInFrames={150}
               fps={30}

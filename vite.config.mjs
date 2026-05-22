@@ -11,10 +11,24 @@ export default defineConfig({
   root: path.resolve(__dirname),
   plugins: [react(), tailwindcss()],
   server: {
+    host: '0.0.0.0',
+    allowedHosts: [
+      'sdehotelmanagementsystemtangyuan-production.up.railway.app',
+    ],
     port: 5173,
     proxy: {
-      '/api': process.env.VITE_API_URL ?? 'http://localhost:3001',
+      '/api': {
+        target: process.env.VITE_API_URL ?? 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      },
     },
+  },
+  preview: {
+    host: '0.0.0.0',
+    allowedHosts: [
+      'sdehotelmanagementsystemtangyuan-production.up.railway.app',
+    ],
   },
   build: {
     outDir: path.resolve(__dirname, 'dist'),

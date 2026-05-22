@@ -87,7 +87,7 @@ export function Booking() {
     setSubmitting(true);
 
     try {
-      const { booking } = await hotelApi.createBooking({
+      await hotelApi.createBooking({
         roomId: room.id,
         userName: `${formData.firstName} ${formData.lastName}`.trim(),
         checkIn: formData.checkIn,

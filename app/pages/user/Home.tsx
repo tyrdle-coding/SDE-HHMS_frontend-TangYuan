@@ -199,8 +199,8 @@ export function Home() {
                     transition={{ delay: 0.38, duration: 1.02, ease: [0.22, 1, 0.36, 1] }}
                     className="max-w-5xl text-[2.8rem] leading-[0.95] sm:text-[4.8rem] lg:text-[6.8rem] xl:text-[8.1rem] tracking-[-0.055em]"
                   >
-                    Visible Code Change
-                    <span className="block text-[#f2d39a] italic font-light">Testing Code Change</span>
+                    Stay in motion.
+                    <span className="block text-[#f2d39a] italic font-light">Luxury in slow reveal.</span>
                   </motion.h1>
                 </div>
                 <Effect
