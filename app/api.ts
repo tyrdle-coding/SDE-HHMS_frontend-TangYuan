@@ -7,7 +7,6 @@ import type {
   User,
 } from './types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapBooking(b: any): Booking {
   return {
     id: b.id,
