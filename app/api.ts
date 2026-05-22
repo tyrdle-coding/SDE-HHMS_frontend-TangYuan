@@ -29,22 +29,36 @@ function mapBooking(b: any): Booking {
   };
 }
 
-const API_BASE = import.meta.env.VITE_API_URL ?? '';
+const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
+
+async function readErrorMessage(response: Response, fallback: string) {
+  const error = await response.json().catch(() => null);
+  return error && typeof error.message === 'string' ? error.message : fallback;
+}
+
+function getNetworkError() {
+  return new Error('Unable to reach the backend. Check VITE_API_URL and backend CORS settings.');
+}
 
 // Shared fetch helper for all frontend-to-backend API requests.
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-    ...init,
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init?.headers ?? {}),
+      },
+      ...init,
+    });
+  } catch {
+    throw getNetworkError();
+  }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message ?? 'Request failed');
+    throw new Error(await readErrorMessage(response, 'Request failed'));
   }
 
   return response.json();
@@ -86,7 +100,9 @@ export const hotelApi = {
       method: 'DELETE',
     }),
   getBookings: async (userId?: string) => {
-    const data = await request<{ bookings: unknown[] }>(userId ? '/api/bookings?userId=' + userId : '/api/bookings');
+    const data = await request<{ bookings: unknown[] }>(
+      userId ? '/api/bookings?userId=' + encodeURIComponent(userId) : '/api/bookings',
+    );
     return { bookings: data.bookings.map(mapBooking) };
   },
   createBooking: async (payload: {
@@ -123,16 +139,25 @@ export const hotelApi = {
     const data = await request<{ stats: AdminStats & { recentBookings: unknown[] } }>('/api/admin/stats');
     return { stats: { ...data.stats, recentBookings: data.stats.recentBookings.map(mapBooking) } };
   },
-  uploadImage: (file: File) => {
+  uploadImage: async (file: File) => {
     const formData = new FormData();
     formData.append('image', file);
-    return fetch('/api/upload', {
-      method: 'POST',
-      credentials: 'include',
-      body: formData,
-    }).then((res) => {
-      if (!res.ok) throw new Error('Upload failed');
-      return res.json() as Promise<{ url: string }>;
-    });
+    let response: Response;
+
+    try {
+      response = await fetch(`${API_BASE}/api/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+    } catch {
+      throw getNetworkError();
+    }
+
+    if (!response.ok) {
+      throw new Error(await readErrorMessage(response, 'Upload failed'));
+    }
+
+    return response.json() as Promise<{ url: string }>;
   },
 };

@@ -1,6 +1,7 @@
 import { Player } from '@remotion/player';
+import type { PlayerRef } from '@remotion/player';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Navigation } from '../../components/Navigation';
 import { Toaster } from '../../components/Toaster';
@@ -10,7 +11,9 @@ import { Footer } from '../../components/Footer';
 export function Root() {
   const location = useLocation();
   const [showIntro, setShowIntro] = useState(false);
+  const [introStarted, setIntroStarted] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 1920, height: 1080 });
+  const playerRef = useRef<PlayerRef>(null);
 
   useEffect(() => {
     setShowIntro(true);
@@ -21,19 +24,33 @@ export function Root() {
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
 
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!introStarted) {
+      return;
+    }
+
     const timer = window.setTimeout(() => {
       setShowIntro(false);
     }, 5600);
 
     return () => {
       window.clearTimeout(timer);
-      window.removeEventListener('resize', updateDimensions);
     };
-  }, []);
+  }, [introStarted]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [location.pathname]);
+
+  const handleStartIntro = () => {
+    setIntroStarted(true);
+    playerRef.current?.play();
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -48,13 +65,15 @@ export function Root() {
             className="site-intro-shell"
           >
             <Player
+              ref={playerRef}
+              acknowledgeRemotionLicense
               component={HotelIntroComposition}
               durationInFrames={150}
               fps={30}
               compositionWidth={dimensions.width}
               compositionHeight={dimensions.height}
               controls={false}
-              autoPlay
+              autoPlay={false}
               loop={false}
               clickToPlay={false}
               showVolumeControls={false}
@@ -63,6 +82,16 @@ export function Root() {
               onEnded={() => setShowIntro(false)}
               className="site-intro-player"
             />
+            {!introStarted ? (
+              <button
+                type="button"
+                onClick={handleStartIntro}
+                className="site-intro-start"
+                aria-label="Start intro"
+              >
+                Start
+              </button>
+            ) : null}
           </motion.div>
         ) : null}
       </AnimatePresence>
