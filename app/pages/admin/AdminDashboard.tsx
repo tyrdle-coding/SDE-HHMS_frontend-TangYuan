@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Hotel, Calendar, DollarSign, Users, TrendingUp, ArrowUp, ArrowDown } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { hotelApi } from '../../api';
@@ -9,18 +9,26 @@ import { useAuth } from '../../components/AuthContext';
 import { formatCurrency } from '../../components/utils';
 
 export function AdminDashboard() {
-  const { isAdmin } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [statsData, setStatsData] = useState<AdminStats | null>(null);
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
-    if (!isAdmin) {
+    if (user && user.role !== 'admin') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate, user]);
+
+  useEffect(() => {
+    if (user?.role !== 'admin') {
       return;
     }
 
     hotelApi.getAdminStats()
       .then((data) => setStatsData(data.stats))
       .catch(() => setStatsData(null));
-  }, [isAdmin]);
+  }, [user?.role]);
 
   if (!isAdmin) {
     return (

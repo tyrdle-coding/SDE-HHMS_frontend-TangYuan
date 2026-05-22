@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, Search, Sparkles, Maximize, Users, ArrowRight, X, Upload } from 'lucide-react';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
@@ -14,7 +14,8 @@ import { formatCurrency } from '../../components/utils';
 import type { Room, RoomType } from '../../types';
 
 export function AdminRooms() {
-  const { isAdmin } = useAuth();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [rooms, setRooms] = useState<Room[]>([]);
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
@@ -32,6 +33,13 @@ export function AdminRooms() {
     amenities: '',
     available: true,
   });
+  const isAdmin = user?.role === 'admin';
+
+  useEffect(() => {
+    if (user && user.role !== 'admin') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate, user]);
 
   const filteredRooms = rooms.filter((room) =>
     room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,10 +53,12 @@ export function AdminRooms() {
   };
 
   useEffect(() => {
-    if (isAdmin) {
-      loadRooms();
+    if (user?.role !== 'admin') {
+      return;
     }
-  }, [isAdmin]);
+
+    loadRooms();
+  }, [user?.role]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, field: 'image' | 'gallery') => {
     const file = event.target.files?.[0];
